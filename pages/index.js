@@ -1,18 +1,6 @@
 import { Button,InputGroup,FormControl,Alert,Jumbotron } from 'react-bootstrap';
 import React, { useState } from 'react';
-var Datastore = require('nedb');
-function string10to62(number) {
-    var chars = '0123456789abcdefghigklmnopqrstuvwxyzABCDEFGHIGKLMNOPQRSTUVWXYZ'.split(''),
-      radix = chars.length,
-      qutient = +number,
-      arr = [];
-    do {
-      let mod = qutient % radix;
-      qutient = (qutient - mod) / radix;
-      arr.unshift(chars[mod]);
-    } while (qutient);
-    return arr.join('');
-}
+
 function isValidUrl(url) {
     console.log('check',url);
     try {
@@ -22,6 +10,7 @@ function isValidUrl(url) {
     }
     return true;
 }
+
 export default () => {
     const [url,setUrl]=useState('');
     const [msg,setMsg]=useState('');
@@ -36,26 +25,21 @@ export default () => {
         setVariant('success');
         setUrl('');
     }
-    const post=()=>{
+    const post=async()=>{
+
         if(isValidUrl(url)){
-            let db = new Datastore({ filename: './db', autoload: true });
-            console.log(url);
-            db.findOne({ _id: 'ai' }, function (err, doc) {
-                console.log('_id',doc);
-                if(doc==null){
-                    db.insert({_id:'ai',value:10000000}, function (err, newDoc) {
-                        db.insert({type:'url',slug:string10to62(10000000),url:url,time:Date.now()}, function (err, newDoc) {
-                            show(newDoc);
-                        });
-                    });
-                }else{
-                    db.update({ _id: 'ai' }, { $set: { value: doc.value+1 } }, {}, function () {
-                    });
-                    db.insert({type:'url',slug:string10to62(doc.value+1),url:url,time:Date.now()}, function (err, newDoc) {
-                        show(newDoc);
-                    });
-                }
+            const res = await fetch('/api/post',{
+                method:"POST",
+                //mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body:JSON.stringify({
+                    'url' : url
+                })
             });
+            const json = await res.json();
+            show(json);
         }else{
             setMsg('url不正确');
             setVariant('danger');

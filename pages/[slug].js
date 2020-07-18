@@ -1,22 +1,28 @@
 import { useRouter } from 'next/router';
-import React, { useState } from 'react';
-var Datastore = require('nedb');
+import React, { useState,useEffect } from 'react';
+
 export default ()=>{
     const [url,setUrl]=useState(null);
     const [msg,setMsg]=useState('');
-    let db = new Datastore({ filename: './db', autoload: true });
-    const router = useRouter()
-    const { slug } = router.query
-    db.findOne({ slug: slug }, function (err, doc) {
-        //callback
-        console.log(doc);
-        if(doc!=null){
-            setUrl(doc.url);
-            window.location.href=doc.url;
+    
+    const router = useRouter();
+    const { slug } = router.query;
+    console.log('slug',slug);
+
+    const getUrl = async()=>{
+        const res = await fetch(`/api/${slug}`);
+        const json = await res.json();
+        if(json.err){
+            setMsg(404);
         }else{
-            setMsg('404');
+            setUrl(json.url);
+            window.location.href=json.url;
         }
-    });
+    }
+    useEffect(()=>{
+        getUrl();
+    },[])
+    
     return(
         <>
         <div className="box">
@@ -34,17 +40,11 @@ export default ()=>{
                 `
             }
         </style>
-            {(()=>{
-                if(url){
-                    return(
-                        <>正在跳转到 {url} ，请稍后。。。</>
-                    )
-                }else{
-                    return(
-                        <>{msg}</>
-                    )
-                }
-            })()}
+        {
+            url!=null?<>
+            正在跳转到 {url} ，请稍后。。。
+            </>:<>{msg}</>
+        }
         </div>
         </>
     )
