@@ -1,16 +1,12 @@
-const currentPath = process.cwd();
-var Datastore = require('nedb');
-let db = new Datastore({ filename: `${currentPath}/db`, autoload: true });
-export default (req, res) => {
+import { get } from '../../db'
+export default async (req, res) => {
     const {
-      query: { slug },
+        query: { slug },
     } = req
-    
-    db.findOne({ slug: slug }, function (err, doc) {
-        if(doc!=null){
-            res.json({url:doc.url})
-        }else{
-            res.json({err:true});
-        }
-    });
+    const url = await get(slug)
+    if (url) {
+        return res.json({ err: false, url: url })
+    } else {
+        return res.json({ err: true, msg: error.message })
+    }
 }
